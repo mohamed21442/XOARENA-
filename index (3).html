@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>إكس أو</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@600;700&family=Cairo:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#0e2a2b;--bg2:#174346;--brass:#c9a24b;--ivory:#f2ead8;--mute:#8fb0aa;--x:#ff6a57}
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;display:grid;place-items:center;padding:20px 16px;color:var(--ivory);font-family:'Cairo',system-ui,sans-serif;background:radial-gradient(120% 90% at 50% 0%,var(--bg2),var(--bg) 70%)}
+main{width:100%;max-width:400px}
+h1{font-family:'Reem Kufi',serif;font-weight:700;font-size:3.6rem;line-height:1;text-align:center;margin:0 0 6px;letter-spacing:2px}
+.sub{text-align:center;color:var(--mute);margin:0 0 28px}
+button{font-family:inherit;cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.btn{display:block;width:100%;padding:13px 16px;margin-top:12px;border-radius:999px;border:2px solid var(--brass);background:transparent;font-size:1.05rem;font-weight:700}
+.btn.main{background:var(--brass);color:#1b1a12}
+.btn:active{transform:scale(.98)}
+.join{display:flex;gap:10px;margin-top:12px}
+.join .btn{margin:0;width:auto;padding-inline:26px}
+input{flex:1;min-width:0;padding:12px;border-radius:999px;border:2px solid #3a6663;background:rgba(0,0,0,.2);color:var(--ivory);font:700 1.15rem 'Cairo',sans-serif;text-align:center;letter-spacing:4px;text-transform:lowercase}
+.note{min-height:1.6em;text-align:center;color:var(--mute);margin:14px 0 0}
+.note.bad{color:#ffb4a8}
+.hide{display:none!important}
+.code{direction:ltr;text-align:center;font:700 3rem 'Reem Kufi',serif;letter-spacing:8px;color:var(--brass);margin:10px 0}
+.top{display:flex;justify-content:space-between;gap:12px;margin-bottom:16px}
+.pl{flex:1;text-align:center;padding-bottom:8px;border-bottom:3px solid transparent;opacity:.6}
+.pl.on{border-color:var(--brass);opacity:1}
+.pl b{display:block;font:700 2.2rem/1 'Reem Kufi',serif}
+.pl small{color:var(--mute)}
+.pl i{display:block;font-style:normal;font-weight:700;font-size:1.4rem}
+#st{text-align:center;font-weight:700;font-size:1.15rem;min-height:2em;margin-bottom:10px}
+#bd{display:grid;grid-template-columns:repeat(3,1fr);direction:ltr}
+.c{aspect-ratio:1;display:grid;place-items:center;background:none;border:0;padding:0;border-color:var(--brass);border-style:solid;border-width:0;transition:opacity .25s}
+.c:nth-child(-n+6){border-bottom-width:4px}
+.c:not(:nth-child(3n)){border-right-width:4px}
+.c.dim{opacity:.22}
+.c:disabled{cursor:default}
+.c:not(:disabled):hover{background:rgba(201,162,75,.1)}
+.c svg{width:62%;height:62%;fill:none;stroke-width:9;stroke-linecap:round}
+.c .X path{stroke:var(--x);stroke-dasharray:75;stroke-dashoffset:75;animation:d .3s forwards}
+.c .X path+path{animation-delay:.15s}
+.c .O circle{stroke:var(--ivory);stroke-dasharray:176;stroke-dashoffset:176;animation:d .45s forwards}
+@keyframes d{to{stroke-dashoffset:0}}
+.back{display:block;margin:22px auto 0;background:none;border:0;color:var(--mute);font-size:.95rem}
+@media (prefers-reduced-motion:reduce){.c svg *{animation-duration:.01s!important;animation-delay:0s!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>إكس أو</h1>
+<p class="sub">العب مع صاحبك من أي مكان</p>
+
+<section id="menu">
+  <button class="btn main" id="create">اعمل أوضة</button>
+  <div class="join"><input id="codeIn" maxlength="5" placeholder="كود الأوضة" autocomplete="off" aria-label="كود الأوضة"><button class="btn" id="join">ادخل</button></div>
+  <button class="btn" id="local">العب على نفس الجهاز</button>
+  <p class="note" id="msg"></p>
+</section>
+
+<section id="wait" class="hide">
+  <p class="note">ابعت الكود أو الرابط لصاحبك</p>
+  <div class="code" id="codeShow"></div>
+  <button class="btn main" id="copy">انسخ الرابط</button>
+  <p class="note" id="waitMsg">مستني اللاعب التاني…</p>
+</section>
+
+<section id="game" class="hide">
+  <div class="top">
+    <div class="pl" id="pX"><b style="color:var(--x)">X</b><small id="nX"></small><i id="sX">0</i></div>
+    <div class="pl" id="pO"><b>O</b><small id="nO"></small><i id="sO">0</i></div>
+  </div>
+  <div id="st"></div>
+  <div id="bd"></div>
+  <button class="btn main hide" id="again">جولة جديدة</button>
+</section>
+
+<button class="back hide" id="exit">رجوع للقائمة</button>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+var mode=null,S=null,peer=null,conn=null,host=false,side=null,link='',tm=null;
+var bd=$('bd'),cells=[];
+for(var k=0;k<9;k++){(function(i){var b=document.createElement('button');b.className='c';b.setAttribute('aria-label','خانة '+(i+1));b.onclick=function(){tap(i)};bd.appendChild(b);cells.push(b)})(k)}
+
+function fresh(){return{b:Array(9).fill(''),turn:'X',win:null,line:null,sc:{X:0,O:0},n:0}}
+function calc(b){for(var i=0;i<8;i++){var l=LINES[i];if(b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[0]]===b[l[2]])return{w:b[l[0]],l:l}}return b.every(Boolean)?{w:'draw',l:null}:null}
+function show(id){['menu','wait','game'].forEach(function(s){$(s).classList.toggle('hide',s!==id)});$('exit').classList.toggle('hide',id==='menu')}
+function note(t,bad){var e=$('msg');e.textContent=t||'';e.classList.toggle('bad',!!bad)}
+function rand(){var a='abcdefghjkmnpqrstuvwxyz23456789',s='';for(var i=0;i<5;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function mark(v){return v==='X'?'<svg class="X" viewBox="0 0 100 100"><path d="M24 24L76 76"/><path d="M76 24L24 76"/></svg>':v==='O'?'<svg class="O" viewBox="0 0 100 100"><circle cx="50" cy="50" r="28"/></svg>':''}
+
+function canPlay(){return !!S&&!S.win&&(mode==='local'||S.turn===side)}
+function render(){
+  if(!S)return;
+  for(var i=0;i<9;i++){var c=cells[i];
+    if(c.dataset.v!==S.b[i]){c.dataset.v=S.b[i];c.innerHTML=mark(S.b[i])}
+    c.classList.toggle('dim',!!(S.line&&S.line.indexOf(i)<0));
+    c.disabled=!!S.b[i]||!canPlay()}
+  $('sX').textContent=S.sc.X;$('sO').textContent=S.sc.O;
+  $('pX').classList.toggle('on',!S.win&&S.turn==='X');$('pO').classList.toggle('on',!S.win&&S.turn==='O');
+  var on=mode==='online';
+  $('nX').textContent=on?(side==='X'?'إنت':'صاحبك'):'لاعب 1';
+  $('nO').textContent=on?(side==='O'?'إنت':'صاحبك'):'لاعب 2';
+  var t;
+  if(S.win==='draw')t='تعادل';
+  else if(S.win)t=on?(S.win===side?'كسبت!':'صاحبك كسب المرة دي'):'كسب '+S.win;
+  else t=on?(S.turn===side?'دورك':'مستني صاحبك…'):'دور '+S.turn;
+  $('st').textContent=t;
+  $('again').classList.toggle('hide',!S.win);
+}
+function place(i,s){
+  if(S.win||S.b[i]||S.turn!==s)return false;
+  S.b[i]=s;var r=calc(S.b);
+  if(r){S.win=r.w;S.line=r.l;if(r.w!=='draw')S.sc[r.w]++}else S.turn=s==='X'?'O':'X';
+  return true;
+}
+function next(){S.n++;S.b=Array(9).fill('');S.win=null;S.line=null;S.turn=S.n%2?'O':'X'}
+function send(){if(conn&&conn.open)conn.send({t:'state',s:S})}
+
+function tap(i){
+  if(!canPlay())return;
+  if(mode==='local'){if(place(i,S.turn))render()}
+  else if(host){if(place(i,'X')){render();send()}}
+  else if(conn&&conn.open)conn.send({t:'move',i:i});
+}
+$('again').onclick=function(){
+  if(mode==='local'||host){next();render();send()}
+  else if(conn&&conn.open)conn.send({t:'again'});
+};
+
+function onData(m){
+  if(!m||!m.t)return;
+  if(host){
+    if(m.t==='move'&&typeof m.i==='number'&&m.i>=0&&m.i<9&&place(m.i,'O')){render();send()}
+    else if(m.t==='again'&&S.win){next();render();send()}
+  }else if(m.t==='state'){
+    clearTimeout(tm);S=m.s;show('game');render();
+  }else if(m.t==='full'){leave();note('الأوضة دي فيها لاعبين خلاص.',true)}
+}
+function net(c){
+  c.on('data',onData);
+  c.on('close',function(){if(c===conn&&mode==='online'){leave();note('صاحبك خرج من الأوضة.',true)}});
+}
+function leave(){
+  clearTimeout(tm);
+  var c=conn,p=peer;conn=null;peer=null;mode=null;S=null;host=false;
+  try{if(c)c.close()}catch(e){}try{if(p)p.destroy()}catch(e){}
+  show('menu');
+}
+function fail(t){leave();note(t,true)}
+
+function create(){
+  if(typeof Peer==='undefined'){note('تعذّر تحميل مكتبة الاتصال. اتأكد من الإنترنت.',true);return}
+  var code=rand();mode='online';host=true;side='X';
+  peer=new Peer('xo-'+code);
+  peer.on('open',function(){
+    link=location.origin+location.pathname+'?r='+code;
+    $('codeShow').textContent=code;$('waitMsg').textContent='مستني اللاعب التاني…';show('wait');
+  });
+  peer.on('connection',function(c){
+    if(conn&&conn.open){c.on('open',function(){c.send({t:'full'});setTimeout(function(){c.close()},400)});return}
+    conn=c;net(c);
+    c.on('open',function(){S=fresh();show('game');render();send()});
+  });
+  peer.on('error',function(e){
+    if(e.type==='unavailable-id'){leave();create()}else fail('حصلت مشكلة في الاتصال. جرّب تاني.');
+  });
+}
+function join(code){
+  if(typeof Peer==='undefined'){note('تعذّر تحميل مكتبة الاتصال. اتأكد من الإنترنت.',true);return}
+  mode='online';host=false;side='O';
+  $('codeShow').textContent=code;$('waitMsg').textContent='بدخل الأوضة…';$('copy').classList.add('hide');show('wait');
+  peer=new Peer();
+  peer.on('open',function(){conn=peer.connect('xo-'+code,{reliable:true});net(conn)});
+  peer.on('error',function(e){fail(e.type==='peer-unavailable'?'مفيش أوضة بالكود ده. اتأكد من الكود.':'حصلت مشكلة في الاتصال. جرّب تاني.')});
+  tm=setTimeout(function(){fail('الاتصال أخد وقت طويل. جرّب تاني.')},12000);
+}
+
+$('create').onclick=function(){note('');$('copy').classList.remove('hide');create()};
+$('join').onclick=function(){
+  var c=$('codeIn').value.trim().toLowerCase();
+  if(!/^[a-z0-9]{3,8}$/.test(c)){note('اكتب كود الأوضة صح.',true);return}
+  note('');join(c);
+};
+$('codeIn').onkeydown=function(e){if(e.key==='Enter')$('join').click()};
+$('local').onclick=function(){mode='local';S=fresh();show('game');render()};
+$('exit').onclick=function(){note('');leave()};
+$('copy').onclick=function(){
+  var b=$('copy');
+  function ok(){b.textContent='اتنسخ';setTimeout(function(){b.textContent='انسخ الرابط'},1800)}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(link).then(ok,function(){prompt('انسخ الرابط:',link)});
+  else prompt('انسخ الرابط:',link);
+};
+
+var q=/[?&]r=([a-z0-9]{3,8})/i.exec(location.search);
+if(q){$('codeIn').value=q[1].toLowerCase();join(q[1].toLowerCase())}
+})();
+</script>
+</body>
+</html>
